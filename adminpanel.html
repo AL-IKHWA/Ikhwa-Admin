@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم | الأخوة شوب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1a17;
+    --espresso: #2b2420;
+    --brass: #b8863b;
+    --brass-light: #d8ab6a;
+    --linen: #f6f1e8;
+    --linen-dim: #ece4d5;
+    --line: #d9cdb6;
+    --danger: #a33c3c;
+    --success: #2e7d32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--linen);
+    color: var(--ink);
+    line-height: 1.6;
+    padding-bottom: 3rem;
+  }
+  h1, h2, h3, .brand { font-family: 'Tajawal', sans-serif; }
+  
+  header {
+    background: var(--espresso);
+    color: var(--linen);
+    padding: 1.2rem 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--brass);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header span { color: var(--brass-light); }
+
+  .container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--line);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--espresso);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active {
+    border-bottom-color: var(--brass);
+    color: var(--brass);
+  }
+
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  }
+  .card h2 {
+    font-size: 1.2rem;
+    color: var(--espresso);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--linen-dim);
+    padding-bottom: 0.5rem;
+  }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--line);
+    background: var(--linen);
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--brass); background: #fff; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  
+  .btn {
+    display: inline-block;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    background: var(--espresso);
+    color: var(--linen);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .btn:hover { background: var(--brass); }
+  .btn-danger { background: var(--danger); }
+  .btn-danger:hover { background: #822e2e; }
+
+  /* Product List Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: #fff;
+  }
+  th, td {
+    padding: 0.8rem;
+    text-align: right;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.88rem;
+  }
+  th { background: var(--linen-dim); color: var(--espresso); font-weight: 700; }
+  .img-thumb { width: 45px; height: 45px; object-fit: cover; background: var(--linen-dim); }
+
+  /* Orders List */
+  .order-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    border-bottom: 1px solid var(--linen-dim);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .order-details { font-size: 0.85rem; color: #555; }
+  .order-items { margin-top: 0.5rem; padding-inline-start: 1rem; }
+</style>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>لوحة التحكم | <span>الأخوة شوب</span></h1>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('products-tab')">إدارة المنتجات</button>
+    <button class="tab-btn" onclick="switchTab('orders-tab')">الطلبات الواردة</button>
+  </div>
+
+  <!-- قسم المنتجات -->
+  <div id="products-tab" class="section-panel active">
+    <div class="card">
+      <h2>إضافة منتج جديد</h2>
+      <form id="addProductForm">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>اسم المنتج *</label>
+            <input type="text" id="pName" required>
+          </div>
+          <div class="form-group">
+            <label>السعر (د.ج) *</label>
+            <input type="number" id="pPrice" required>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>الفئة</label>
+            <input type="text" id="pCategory" placeholder="مثال: تنظيم المطبخ">
+          </div>
+          <div class="form-group">
+            <label>الكمية المتوفرة (Stock) *</label>
+            <input type="number" id="pStock" required value="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>وصف المنتج</label>
+          <textarea id="pDesc" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>روابط الصور (رابط URL لكل صورة - يمكنك إضافة حتى 5 صور):</label>
+          <input type="url" id="pImg1" placeholder="رابط الصورة الأولى (الرئيسية)" style="margin-bottom:0.4rem;" required>
+          <input type="url" id="pImg2" placeholder="رابط الصورة الثانية (اختياري)" style="margin-bottom:0.4rem;">
+          <input type="url" id="pImg3" placeholder="رابط الصورة الثالثة (اختياري)" style="margin-bottom:0.4rem;">
+          <input type="url" id="pImg4" placeholder="رابط الصورة الرابعة (اختياري)" style="margin-bottom:0.4rem;">
+          <input type="url" id="pImg5" placeholder="رابط الصورة الخامسة (اختياري)">
+        </div>
+
+        <button type="submit" class="btn">حفظ ونشر المنتج</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>قائمة المنتجات الحالية</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>الصورة</th>
+            <th>الاسم</th>
+            <th>السعر</th>
+            <th>الكمية</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody">
+          <tr><td colspan="5" style="text-align:center;">جارِ تحميل المنتجات...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- قسم الطلبات -->
+  <div id="orders-tab" class="section-panel">
+    <div class="card">
+      <h2>الطلبات المستلمة</h2>
+      <div id="ordersList">
+        <p style="text-align:center; color:#777;">جارِ تحميل الطلبات...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// إعدادات Firebase الخاصة بك
+const firebaseConfig = {
+  apiKey: "AIzaSyBo0Dk-Ye319DQ2xhi_oAUH5WtvsDlL55Y",
+  authDomain: "al-ikhwa.firebaseapp.com",
+  projectId: "al-ikhwa",
+  storageBucket: "al-ikhwa.firebasestorage.app",
+  messagingSenderId: "746201902197",
+  appId: "1:746201902197:web:f817955db1a209df1e1c3c",
+  measurementId: "G-C1TLRP0WLL"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// إضافة منتج جديد
+document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const images = [
+    document.getElementById('pImg1').value.trim(),
+    document.getElementById('pImg2').value.trim(),
+    document.getElementById('pImg3').value.trim(),
+    document.getElementById('pImg4').value.trim(),
+    document.getElementById('pImg5').value.trim()
+  ].filter(url => url !== "");
+
+  const newProduct = {
+    name: document.getElementById('pName').value.trim(),
+    price: Number(document.getElementById('pPrice').value),
+    category: document.getElementById('pCategory').value.trim(),
+    stock: Number(document.getElementById('pStock').value),
+    description: document.getElementById('pDesc').value.trim(),
+    images: images,
+    image: images[0] || "",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection('products').add(newProduct);
+    alert('تمت إضافة المنتج بنجاح!');
+    document.getElementById('addProductForm').reset();
+  } catch (err) {
+    alert('حدث خطأ أثناء الإضافة: ' + err.message);
+  }
+});
+
+// جلب المنتجات في الوقت الفعلي وحذفها
+db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+  const tbody = document.getElementById('productsTableBody');
+  if (snapshot.empty) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد منتجات حالياً.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = snapshot.docs.map(doc => {
+    const p = doc.data();
+    return `
+      <tr>
+        <td><img src="${p.image || ''}" class="img-thumb" alt=""></td>
+        <td>${escapeHtml(p.name)}</td>
+        <td>${p.price} د.ج</td>
+        <td>${p.stock}</td>
+        <td>
+          <button class="btn btn-danger" onclick="deleteProduct('${doc.id}')">حذف</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+});
+
+async function deleteProduct(id) {
+  if (confirm('هل أنت تأكد من رغبتك في حذف هذا المنتج؟')) {
+    try {
+      await db.collection('products').doc(id).delete();
+    } catch (err) {
+      alert('تعذر الحذف: ' + err.message);
+    }
+  }
+}
+
+// جلب الطلبات الواردة
+db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+  const list = document.getElementById('ordersList');
+  if (snapshot.empty) {
+    list.innerHTML = '<p style="text-align:center; color:#777;">لا توجد طلبات جديدة.</p>';
+    return;
+  }
+  list.innerHTML = snapshot.docs.map(doc => {
+    const o = doc.data();
+    const itemsHtml = (o.items || []).map(i => `<li>${escapeHtml(i.name)} × ${i.qty} (${i.price} د.ج)</li>`).join('');
+    return `
+      <div class="order-card">
+        <div class="order-header">
+          <span>طلب من: ${escapeHtml(o.customerName || 'عميل')}</span>
+          <span>الإجمالي: ${o.total} د.ج</span>
+        </div>
+        <div class="order-details">
+          <p>الهاتف: ${escapeHtml(o.phone || 'غير محدد')}</p>
+          <p>العنوان: ${escapeHtml(o.address || 'غير محدد')}</p>
+          <ul class="order-items">${itemsHtml}</ul>
+        </div>
+        <button class="btn btn-danger" style="margin-top:0.5rem; padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="deleteOrder('${doc.id}')">حذف الطلب</button>
+      </div>
+    `;
+  }).join('');
+});
+
+async function deleteOrder(id) {
+  if (confirm('حذف هذا الطلب؟')) {
+    await db.collection('orders').doc(id).delete();
+  }
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>
